@@ -2,7 +2,7 @@
 FROM node:20-alpine AS assets
 WORKDIR /app
 COPY package*.json ./
-RUN if [ -f package.json ]; then npm install; fi
+RUN if [ -f package-lock.json ]; then npm ci; elif [ -f package.json ]; then npm install; fi
 COPY . .
 RUN if [ -f package.json ] && [ -f vite.config.js ]; then npm run build; else mkdir -p public/build; fi
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 if [ -d "/var/www/Instructor-ledger/storage" ]; then
     mkdir -p /var/www/Instructor-ledger/storage/framework/{sessions,views,cache/data} /var/www/Instructor-ledger/storage/logs /var/www/Instructor-ledger/bootstrap/cache
