@@ -18,7 +18,7 @@ class RefreshInstructorBalanceSnapshot
         $balance = $this->calculator->for($instructorId, $currency, $asOf);
 
         return DB::transaction(function () use ($instructorId, $currency, $asOf, $balance) {
-            InstructorBalanceSnapshot::query()->updateOrCreate(
+            DB::table('instructor_balance_snapshots')->updateOrInsert(
                 ['instructor_id' => $instructorId, 'currency' => $currency],
                 [
                     'earned_minor' => $balance['earned_minor'],
@@ -27,6 +27,8 @@ class RefreshInstructorBalanceSnapshot
                     'reserved_minor' => $balance['reserved_minor'],
                     'outstanding_minor' => $balance['outstanding_minor'],
                     'as_of' => $asOf,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ],
             );
 
