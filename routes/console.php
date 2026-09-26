@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('revenue:recognize')->dailyAt('00:05')->withoutOverlapping();
+Schedule::command('instructors:payout --currency=EGP')->dailyAt('01:00')->withoutOverlapping();
