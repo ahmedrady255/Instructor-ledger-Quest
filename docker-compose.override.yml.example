@@ -1,0 +1,21 @@
+# docker-compose.override.yml.example
+# Copy this file to docker-compose.override.yml to customize local service settings.
+
+services:
+  app:
+    environment:
+      - XDEBUG_MODE=off
+    # volumes:
+    #   - ~/.composer:/root/.composer
+
+  nginx:
+    ports:
+      - "8080:80"
+
+  mysql:
+    ports:
+      - "3308:3306"
+
+  redis:
+    ports:
+      - "6381:6379"
