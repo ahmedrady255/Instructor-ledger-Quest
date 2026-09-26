@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('revenue:recognize')->dailyAt('00:05')->withoutOverlapping();
 Schedule::command('instructors:payout --currency=EGP')->dailyAt('01:00')->withoutOverlapping();
+Schedule::command('instructors:reconcile-payouts --older-than=5m')->everyFiveMinutes()->withoutOverlapping();

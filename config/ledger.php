@@ -7,4 +7,5 @@ return [
     'payout_destination' => ['token' => env('MOCK_PAYOUT_DESTINATION', 'dst_test')],
     'max_entries_per_payout' => 1000,
     'mock_provider_outcome' => env('MOCK_PROVIDER_OUTCOME', 'success'),
+    'manual_review_after_minutes' => (int) env('PAYOUT_MANUAL_REVIEW_AFTER_MINUTES', 60),
 ];
