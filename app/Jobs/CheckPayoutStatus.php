@@ -14,6 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CheckPayoutStatus implements ShouldQueue
 {
@@ -76,6 +77,11 @@ class CheckPayoutStatus implements ShouldQueue
 
             return in_array($payout->status, [PayoutStatus::Succeeded, PayoutStatus::PermanentlyFailed], true);
         });
+        Log::channel('financial')->info('payout_reconciled', [
+            'payout_id' => $payout->id,
+            'status' => $result->outcome->value,
+            'idempotency_hash' => hash('sha256', $payout->idempotency_key),
+        ]);
 
         if ($terminal) {
             app(RefreshInstructorBalanceSnapshot::class)->handle($payout->instructor_id, $payout->currency);

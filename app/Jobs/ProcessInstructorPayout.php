@@ -15,6 +15,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ProcessInstructorPayout implements ShouldQueue
 {
@@ -82,6 +83,11 @@ class ProcessInstructorPayout implements ShouldQueue
                     'finished_at' => now(),
                 ]);
             });
+            Log::channel('financial')->warning('payout_submission_ambiguous', [
+                'payout_id' => $payout->id,
+                'status' => PayoutStatus::Unknown->value,
+                'idempotency_hash' => hash('sha256', $payout->idempotency_key),
+            ]);
             CheckPayoutStatus::dispatch($payout->id)->onQueue('reconciliation');
 
             return;
@@ -112,6 +118,11 @@ class ProcessInstructorPayout implements ShouldQueue
                 $payout->items()->whereNull('released_at')->update(['released_at' => now()]);
             }
         });
+        Log::channel('financial')->info('payout_submission_completed', [
+            'payout_id' => $payout->id,
+            'status' => $result->outcome->value,
+            'idempotency_hash' => hash('sha256', $payout->idempotency_key),
+        ]);
 
         if ($result->outcome === ProviderOutcome::PermanentlyFailed || $result->outcome === ProviderOutcome::Succeeded) {
             app(RefreshInstructorBalanceSnapshot::class)->handle($payout->instructor_id, $payout->currency);
