@@ -1,9 +1,11 @@
 <?php
 
+use App\Domain\Ledger\LedgerEntryType;
 use App\Domain\Payouts\PayoutStatus;
 use App\Filament\Resources\UserResource;
 use App\Filament\Resources\UserResource\Pages\ViewInstructorFinancialSummary;
 use App\Filament\Resources\UserResource\RelationManagers\PayoutsRelationManager;
+use App\Models\InstructorLedgerEntry;
 use App\Models\Payout;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -83,6 +85,56 @@ it('shows exact per-currency balances and safe paginated payout history read onl
         ->assertTableFilterExists('status')
         ->assertTableFilterExists('currency')
         ->assertTableFilterExists('created_at')
+        ->assertTableActionDoesNotExist('edit')
+        ->assertTableActionDoesNotExist('delete')
+        ->assertTableBulkActionDoesNotExist('delete');
+});
+
+it('shows the global ledger as a read only paginated table', function () {
+    $admin = User::factory()->create();
+    $entry = InstructorLedgerEntry::factory()->create([
+        'source_key' => 'global-ledger-entry',
+        'type' => LedgerEntryType::RefundAdjustment,
+        'amount_minor' => -1234,
+        'currency' => 'EGP',
+    ]);
+
+    $this->actingAs($admin)
+        ->get('/admin/instructor-ledger-entries')
+        ->assertOk()
+        ->assertSee($entry->instructor->name)
+        ->assertSee('REFUND_ADJUSTMENT')
+        ->assertSee('-12.34 EGP')
+        ->assertSee('global-ledger-entry')
+        ->assertDontSee('Create')
+        ->assertDontSee('Edit')
+        ->assertDontSee('Delete');
+});
+
+it('shows only the selected instructor ledger entries in a read only tab', function () {
+    $component = 'App\\Filament\\Resources\\UserResource\\RelationManagers\\LedgerEntriesRelationManager';
+    expect(class_exists($component))->toBeTrue();
+
+    $admin = User::factory()->create();
+    $instructor = User::factory()->create();
+    $entries = InstructorLedgerEntry::factory()->count(30)
+        ->sequence(fn (Sequence $sequence) => [
+            'earned_at' => now()->subDays($sequence->index),
+            'source_key' => "instructor-entry-{$sequence->index}",
+        ])
+        ->create(['instructor_id' => $instructor->id]);
+    $outsider = InstructorLedgerEntry::factory()->create(['source_key' => 'other-instructor-entry']);
+
+    Livewire::test($component, [
+        'ownerRecord' => $instructor,
+        'pageClass' => ViewInstructorFinancialSummary::class,
+    ])->assertCanSeeTableRecords($entries->take(10))
+        ->assertCanNotSeeTableRecords($entries->skip(10))
+        ->assertCanNotSeeTableRecords([$outsider])
+        ->assertSee('instructor-entry-0')
+        ->assertTableFilterExists('type')
+        ->assertTableFilterExists('currency')
+        ->assertTableFilterExists('earned_at')
         ->assertTableActionDoesNotExist('edit')
         ->assertTableActionDoesNotExist('delete')
         ->assertTableBulkActionDoesNotExist('delete');

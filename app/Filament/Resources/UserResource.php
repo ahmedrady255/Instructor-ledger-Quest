@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages\ListInstructors;
 use App\Filament\Resources\UserResource\Pages\ViewInstructorFinancialSummary;
+use App\Filament\Resources\UserResource\RelationManagers\LedgerEntriesRelationManager;
 use App\Filament\Resources\UserResource\RelationManagers\PayoutsRelationManager;
 use App\Models\User;
 use Filament\Forms\Form;
@@ -62,7 +63,7 @@ class UserResource extends Resource
 
     public static function getRelations(): array
     {
-        return [PayoutsRelationManager::class];
+        return [LedgerEntriesRelationManager::class, PayoutsRelationManager::class];
     }
 
     public static function getPages(): array
